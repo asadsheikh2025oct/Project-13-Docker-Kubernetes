@@ -9,6 +9,8 @@ trigger:
  paths:
    exclude:
      - azure-pipelines.yml
+     - README.md
+     - '*.png'
 
 resources:
 - repo: self
