@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: voting-app-deployment
+  labels:
+    app: voting-app
+spec:
+  replicas: 2 # This ensures high availability (two copies of your app)
+  selector:
+    matchLabels:
+      app: voting-app
+  template:
+    metadata:
+      labels:
+        app: voting-app
+    spec:
+      containers:
+      - name: voting-app-container
+        # IMPORTANT: The pipeline will automatically replace the tag part 
+        # but ensure the registry name and image name are correct.
+        image: dockerregistry20260102.azurecr.io/projectdockerkuberimage:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+      
+      # This is the "Key" we created in the pipeline task
+      imagePullSecrets:
+      - name: acr-secret
