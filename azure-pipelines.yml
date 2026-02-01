@@ -3,7 +3,12 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
 trigger:
-- main
+ branches:
+   include:
+     - main
+ paths:
+   exclude:
+     - azure-pipelines.yml
 
 resources:
 - repo: self
@@ -42,4 +47,31 @@ stages:
   displayName: 'Deploy Stage'
   dependsOn: Build
   condition: succeeded()
-  
+  jobs:
+    - job: Deploy
+      displayName: 'Deploy Job'
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+        - task: KubernetesManifest@1
+          displayName: 'Create Secret'
+          inputs:
+            action: 'createSecret'
+            connectionType: 'kubernetesServiceConnection'
+            kubernetesServiceConnection: 'myAKSconnection'
+            namespace: 'default'
+            secretType: 'dockerRegistry'
+            secretName: 'acr-secret'
+            dockerRegistryEndpoint: 'dockerregistry20260102'
+
+        - task: KubernetesManifest@1
+          inputs:
+            action: 'deploy'
+            connectionType: 'kubernetesServiceConnection'
+            kubernetesServiceConnection: 'myAKSconnection'
+            namespace: 'default'
+            manifests: |
+              $(System.DefaultWorkingDirectory)/deployment.yaml
+              $(System.DefaultWorkingDirectory)/service.yaml
+            containers: '$(containerRegistry)/$(imageRepository):$(tag)'
+
